@@ -70,8 +70,8 @@ public class Plugin : BasePlugin
             )
         );
 
-        _criticalThreshold.SettingChanged += (_, _) => WarnIfThresholdsInverted();
-        _lowThreshold.SettingChanged += (_, _) => WarnIfThresholdsInverted();
+        _criticalThreshold.SettingChanged += OnThresholdChanged;
+        _lowThreshold.SettingChanged += OnThresholdChanged;
         WarnIfThresholdsInverted();
 
         _harmony = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), MyPluginInfo.PLUGIN_GUID);
@@ -84,6 +84,8 @@ public class Plugin : BasePlugin
         _harmony?.UnpatchSelf();
         return true;
     }
+    
+    private static void OnThresholdChanged(object sender, EventArgs e) => WarnIfThresholdsInverted();
 
     private static void WarnIfThresholdsInverted()
     {
