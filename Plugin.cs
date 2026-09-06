@@ -6,6 +6,8 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
+using Il2CppInterop.Runtime.Injection;
+using ReactiveStatusBars.Effects;
 using UnityEngine;
 
 namespace ReactiveStatusBars;
@@ -23,13 +25,25 @@ public class Plugin : BasePlugin
     private static ConfigEntry<Color> _criticalColor;
     private static ConfigEntry<float> _lowBlend;
     private static ConfigEntry<float> _critBlend;
-    
+    private static ConfigEntry<bool> _flashEnabled;
+    private static ConfigEntry<bool> _flashFriendlyOnly;
+    private static ConfigEntry<float> _flashDuration;
+    private static ConfigEntry<float> _flashSpeed;
+    private static ConfigEntry<float> _flashIntensity;
+    private static ConfigEntry<Color> _flashColor;
+
     public static float LowThreshold => _lowThreshold.Value;
     public static float CriticalThreshold => _criticalThreshold.Value;
     public static Color LowColor => _lowColor.Value;
     public static Color CriticalColor => _criticalColor.Value;
     public static float LowBlend => _lowBlend.Value;
     public static float CriticalBlend => _critBlend.Value;
+    public static bool FlashEnabled => _flashEnabled.Value;
+    public static bool FlashFriendlyOnly => _flashFriendlyOnly.Value;
+    public static float FlashDuration => _flashDuration.Value;
+    public static float FlashSpeed => _flashSpeed.Value;
+    public static float FlashIntensity => _flashIntensity.Value;
+    public static Color FlashColor => _flashColor.Value;
 
     public override void Load()
     {
@@ -70,9 +84,33 @@ public class Plugin : BasePlugin
             )
         );
 
+        _flashEnabled = Config.Bind("Flash", "Enabled", true,
+            "Whether bars briefly flash when entering Critical.");
+        _flashFriendlyOnly = Config.Bind("Flash", "FriendlyOnly", true,
+            "If true, only friendly units flash. Enemy severity is still shown via color.");
+        _flashDuration = Config.Bind("Flash", "DurationSeconds", 1.5f,
+            new ConfigDescription(
+                "How long a triggered flash lasts.",
+                new AcceptableValueRange<float>(0.1f, 10f)
+            )
+        );
+        _flashSpeed = Config.Bind("Flash", "SpeedHz", 4f,
+            new ConfigDescription(
+                "Flashes per second while active.",
+                new AcceptableValueRange<float>(0.5f, 15f)
+            )
+        );
+        _flashIntensity = Config.Bind("Flash", "Intensity", 0.6f,
+            new ConfigDescription(
+                "0 = invisible, 1 = flashes fully to FlashColor.", blendRange
+            )
+        );
+        _flashColor = Config.Bind("Flash", "Color", Color.white, "Color the bar flashes toward.");
+
         _criticalThreshold.SettingChanged += OnThresholdChanged;
         _lowThreshold.SettingChanged += OnThresholdChanged;
-        WarnIfThresholdsInverted();
+
+        ClassInjector.RegisterTypeInIl2Cpp<SpriteColorPulse>();
 
         _harmony = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), MyPluginInfo.PLUGIN_GUID);
 
@@ -84,14 +122,18 @@ public class Plugin : BasePlugin
         _harmony?.UnpatchSelf();
         return true;
     }
-    
-    private static void OnThresholdChanged(object sender, EventArgs e) => WarnIfThresholdsInverted();
 
-    private static void WarnIfThresholdsInverted()
+    private static void OnThresholdChanged(object sender, EventArgs e) => ClampThresholds();
+
+    private static void ClampThresholds()
     {
-        if (_criticalThreshold.Value >= _lowThreshold.Value)
-            Log.LogWarning($"Critical threshold ({_criticalThreshold.Value}) should be lower than " +
-                           $"Low threshold ({_lowThreshold.Value})");
+        const float epsilon = 0.01f;
+
+        if (!(_criticalThreshold.Value >= _lowThreshold.Value)) return;
+        var clamped = Math.Max(0f, _lowThreshold.Value - epsilon);
+        Log.LogWarning($"Critical threshold ({_criticalThreshold.Value}) must be lower than " +
+                       $"Low threshold ({_lowThreshold.Value}); clamping Critical to {clamped}.");
+        _criticalThreshold.Value = clamped;
     }
 
     private static void RegisterColorConverter()

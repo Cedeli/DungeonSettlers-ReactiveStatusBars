@@ -8,10 +8,21 @@ namespace ReactiveStatusBars;
 public class UnitShortcutPartsPatches
 {
     [HarmonyPostfix]
+    [HarmonyPatch("OnDestroy")]
+    public static void PostfixOnDestroy(SubUI_UnitShortCutParts __instance)
+    {
+        BarHelper.Unregister(__instance._headHealthBar);
+        BarHelper.Unregister(__instance._headHealthBarBackground);
+        BarHelper.Unregister(__instance._bodyHealthBar);
+        BarHelper.Unregister(__instance._bodyHealthBarBackground);
+    }
+
+    [HarmonyPostfix]
     [HarmonyPatch(nameof(SubUI_UnitShortCutParts.RefreshUnitStatus))]
     public static void PostfixRefresh(SubUI_UnitShortCutParts __instance, UnitEntity unitEntity)
     {
-        var status = unitEntity?.Cast<IEntity>().GetComponent<StatusReader>();
+        var entity = unitEntity?.Cast<IEntity>();
+        var status = entity?.GetComponent<StatusReader>();
         if (status == null) return;
 
         BarHelper.UpdateColor(__instance._headHealthBar,
