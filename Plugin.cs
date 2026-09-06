@@ -23,6 +23,13 @@ public class Plugin : BasePlugin
     private static ConfigEntry<Color> _criticalColor;
     private static ConfigEntry<float> _lowBlend;
     private static ConfigEntry<float> _critBlend;
+    
+    public static float LowThreshold => _lowThreshold.Value;
+    public static float CriticalThreshold => _criticalThreshold.Value;
+    public static Color LowColor => _lowColor.Value;
+    public static Color CriticalColor => _criticalColor.Value;
+    public static float LowBlend => _lowBlend.Value;
+    public static float CriticalBlend => _critBlend.Value;
 
     public override void Load()
     {
