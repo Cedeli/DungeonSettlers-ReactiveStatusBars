@@ -11,6 +11,8 @@ public static class UnitEntityHUDPatches
     [HarmonyPatch(nameof(UnitEntityHUD.Init))]
     public static void PostfixInit(UnitEntityHUD __instance, IEntity entity)
     {
+        var id = __instance.GetInstanceID();
+        BarHelper.UnregisterOwner(id);
         EntityHudRegistry.Register(__instance, entity);
     }
 
@@ -19,11 +21,7 @@ public static class UnitEntityHUDPatches
     public static void PostfixOnDestroy(UnitEntityHUD __instance)
     {
         EntityHudRegistry.Unregister(__instance);
-
-        BarHelper.Unregister(__instance._headHealthBar);
-        BarHelper.Unregister(__instance._headHealthBarBackground);
-        BarHelper.Unregister(__instance._bodyHealthBar);
-        BarHelper.Unregister(__instance._bodyHealthBarBackground);
+        BarHelper.UnregisterOwner(__instance.GetInstanceID());
     }
 
     [HarmonyPostfix]
@@ -32,25 +30,19 @@ public static class UnitEntityHUDPatches
     {
         if (status == null) return;
 
-        var entity = EntityHudRegistry.TryGet(__instance);
-        var isFriendly = FactionHelper.IsFriendly(entity);
+        EntityHudRegistry.TryGetIsFriendly(__instance, out var isFriendly);
+        var ownerId = __instance.GetInstanceID();
 
         var headCurrent = status.GetValue(StatType.HealthHead);
         var headMax = status.GetValue(StatType.MaxHealthHead);
 
-        if (__instance._headHealthBar != null)
-            BarHelper.UpdateColor(__instance._headHealthBar, headCurrent, headMax, isFriendly);
-
-        if (__instance._headHealthBarBackground != null)
-            BarHelper.UpdateColor(__instance._headHealthBarBackground, headCurrent, headMax, isFriendly);
+        BarHelper.UpdateColor(__instance._headHealthBar, headCurrent, headMax, ownerId, isFriendly);
+        BarHelper.UpdateColor(__instance._headHealthBarBackground, headCurrent, headMax, ownerId, isFriendly);
 
         var bodyCurrent = status.GetValue(StatType.HealthBody);
         var bodyMax = status.GetValue(StatType.MaxHealthBody);
 
-        if (__instance._bodyHealthBar != null)
-            BarHelper.UpdateColor(__instance._bodyHealthBar, bodyCurrent, bodyMax, isFriendly);
-
-        if (__instance._bodyHealthBarBackground != null)
-            BarHelper.UpdateColor(__instance._bodyHealthBarBackground, bodyCurrent, bodyMax, isFriendly);
+        BarHelper.UpdateColor(__instance._bodyHealthBar, bodyCurrent, bodyMax, ownerId, isFriendly);
+        BarHelper.UpdateColor(__instance._bodyHealthBarBackground, bodyCurrent, bodyMax, ownerId, isFriendly);
     }
 }

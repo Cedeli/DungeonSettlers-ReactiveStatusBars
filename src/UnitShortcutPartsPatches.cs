@@ -11,10 +11,7 @@ public class UnitShortcutPartsPatches
     [HarmonyPatch("OnDestroy")]
     public static void PostfixOnDestroy(SubUI_UnitShortCutParts __instance)
     {
-        BarHelper.Unregister(__instance._headHealthBar);
-        BarHelper.Unregister(__instance._headHealthBarBackground);
-        BarHelper.Unregister(__instance._bodyHealthBar);
-        BarHelper.Unregister(__instance._bodyHealthBarBackground);
+        BarHelper.UnregisterOwner(__instance.GetInstanceID());
     }
 
     [HarmonyPostfix]
@@ -25,16 +22,18 @@ public class UnitShortcutPartsPatches
         var status = entity?.GetComponent<StatusReader>();
         if (status == null) return;
 
+        var ownerId = __instance.GetInstanceID();
+
         BarHelper.UpdateColor(__instance._headHealthBar,
-            status.GetValue(StatType.HealthHead), status.GetValue(StatType.MaxHealthHead));
+            status.GetValue(StatType.HealthHead), status.GetValue(StatType.MaxHealthHead), ownerId);
 
         BarHelper.UpdateColor(__instance._bodyHealthBar,
-            status.GetValue(StatType.HealthBody), status.GetValue(StatType.MaxHealthBody));
+            status.GetValue(StatType.HealthBody), status.GetValue(StatType.MaxHealthBody), ownerId);
 
         BarHelper.UpdateColor(__instance._energyBar,
-            status.GetValue(StatType.Energy), status.GetValue(StatType.MaxEnergy));
+            status.GetValue(StatType.Energy), status.GetValue(StatType.MaxEnergy), ownerId);
 
         BarHelper.UpdateColor(__instance._hungerBar,
-            status.GetValue(StatType.Hunger), status.GetValue(StatType.MaxHunger));
+            status.GetValue(StatType.Hunger), status.GetValue(StatType.MaxHunger), ownerId);
     }
 }

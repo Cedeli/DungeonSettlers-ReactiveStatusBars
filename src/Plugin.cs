@@ -31,6 +31,7 @@ public class Plugin : BasePlugin
     private static ConfigEntry<float> _flashSpeed;
     private static ConfigEntry<float> _flashIntensity;
     private static ConfigEntry<Color> _flashColor;
+    private static ConfigEntry<bool> _debug;
 
     public static float LowThreshold => _lowThreshold.Value;
     public static float CriticalThreshold => _criticalThreshold.Value;
@@ -44,6 +45,7 @@ public class Plugin : BasePlugin
     public static float FlashSpeed => _flashSpeed.Value;
     public static float FlashIntensity => _flashIntensity.Value;
     public static Color FlashColor => _flashColor.Value;
+    public static bool Debug => _debug.Value;
 
     public override void Load()
     {
@@ -106,6 +108,10 @@ public class Plugin : BasePlugin
             )
         );
         _flashColor = Config.Bind("Flash", "Color", Color.white, "Color the bar flashes toward.");
+        
+        _debug = Config.Bind("Debug", "VerboseLogging", false,
+            "Logs HUD registration, bar-state tracking, and pool release events."
+        );
 
         _criticalThreshold.SettingChanged += OnThresholdChanged;
         _lowThreshold.SettingChanged += OnThresholdChanged;
