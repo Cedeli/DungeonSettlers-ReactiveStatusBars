@@ -2,6 +2,8 @@
 
 A BepInEx plugin for Dungeon Settlers that dynamically changes health bar colors when health drops below specific thresholds, alongside a flashing alert for critical health states.
 
+<img width="752" height="423" alt="dungeonsettlers-healthbar" src="https://github.com/user-attachments/assets/a12e1d9c-13af-4c06-ba0b-685cf54d1e31" />
+
 ## Requirements
 
 * [BepInEx 6 Bleeding Edge, IL2CPP build](https://builds.bepinex.dev/projects/bepinex_be)
