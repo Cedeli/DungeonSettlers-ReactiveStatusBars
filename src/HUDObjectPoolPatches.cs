@@ -18,7 +18,20 @@ public static class HUDObjectPoolPatches
         if (Plugin.Debug)
             Plugin.Log.LogInfo($"HUDObjectPool.Release hud id={id}");
 
-        BarHelper.UnregisterOwner(id);
+        if (obj is UnitEntityHUD unitHud)
+        {
+            BarHelper.RestoreAndUnregisterOwner(id,
+                unitHud._headHealthBar,
+                unitHud._headHealthBarBackground,
+                unitHud._bodyHealthBar,
+                unitHud._bodyHealthBarBackground
+            );
+        }
+        else
+        {
+            BarHelper.UnregisterOwner(id);
+        }
+
         EntityHudRegistry.UnregisterById(id);
     }
 }

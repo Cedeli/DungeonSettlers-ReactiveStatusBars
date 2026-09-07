@@ -88,6 +88,38 @@ public static class BarHelper
         BarIdsByOwner.Remove(ownerId);
     }
 
+    public static void RestoreAndUnregisterOwner(int ownerId, params Component[] bars)
+    {
+        if (BarIdsByOwner.TryGetValue(ownerId, out var ids))
+        {
+            foreach (var barComponent in bars)
+            {
+                if (barComponent == null) continue;
+
+                var id = barComponent.GetInstanceID();
+                if (!States.TryGetValue(id, out var state)) continue;
+
+                switch (barComponent)
+                {
+                    case Image img:
+                        img.color = state.OriginalColor;
+                        break;
+                    case SpriteRenderer sr:
+                        sr.color = state.OriginalColor;
+                        break;
+                }
+
+                if (state.Pulse != null)
+                    state.Pulse.enabled = false;
+            }
+
+            if (Plugin.Debug)
+                Plugin.Log.LogInfo($"RestoreAndUnregisterOwner owner={ownerId} restoredBars={ids.Count}");
+        }
+
+        UnregisterOwner(ownerId);
+    }
+
     private static BarState GetOrCreateState(int id, int ownerId, Color originalColor)
     {
         if (States.TryGetValue(id, out var existing)) return existing;
